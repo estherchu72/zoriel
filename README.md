@@ -1,76 +1,68 @@
-# User Identity and Authentication Smart Contract
+# Anonymization Smart Contract
 
 ## Overview
-This smart contract provides a decentralized identity and role-based authentication system. It allows users to register identities, request verification, and manage their roles within the system. The contract supports multiple user roles with different permissions and enables administrators to verify identities.
+The **Anonymization Smart Contract** is designed to facilitate secure and private data submission for research purposes. It utilizes **ring signatures** to anonymize data submissions while ensuring aggregation and verification of the collected information.
 
 ## Features
+- **Ring Signature-Based Anonymization:** Ensures privacy by allowing users to submit data without revealing their identity.
+- **Data Aggregation:** Collects and processes submitted data for research analysis.
+- **Role-Based Access Control:** Limits submission and research access to authorized users.
+- **Secure Researcher Management:** Only the contract owner can add or remove authorized researchers.
+- **Tamper-Resistant Data Storage:** Stores aggregated data securely on-chain.
 
-### User Registration
-- Users can register an identity with a Decentralized Identifier (DID), role, and metadata.
-- Roles include:
-  - **Patient** (ROLE-PATIENT)
-  - **Doctor** (ROLE-DOCTOR)
-  - **Researcher** (ROLE-RESEARCHER)
-  - **Admin** (ROLE-ADMIN)
-- Patients are auto-verified upon registration, while other roles require verification.
-
-### Identity Verification
-- Users can submit verification requests with proof documents.
-- Admins can approve verification requests, changing the user's status to verified.
-
-### Role-Based Access Control
-- The contract enforces role-based permissions.
-- Admins have full control, including verifying users and managing permissions.
-- Doctors and researchers can access anonymized data.
-- Patients have limited access to features.
-
-### Metadata Management
-- Users can update their metadata to reflect changes in their profile.
-
-### Permission Handling
-- The contract stores role-based permissions, such as the ability to verify others and access anonymized data.
-- A function allows checking if a user has specific permissions.
-
-### Identity Retrieval
-- Users can fetch their registered identity details.
-- Verification request statuses can be retrieved.
-- A function checks if a user is verified.
+## Error Codes
+| Code | Description |
+|------|-------------|
+| `ERR-NOT-AUTHORIZED (u100)` | User is not authorized to perform the action. |
+| `ERR-INVALID-DATA (u101)` | Submitted data is invalid. |
+| `ERR-RING-SIZE-INVALID (u102)` | Provided ring size is invalid. |
 
 ## Data Structures
+### Mappings
+- **`aggregated-data`**: Stores aggregated statistics for each category.
+- **`ring-signatures`**: Stores ring signatures for verification.
+- **`authorized-researchers`**: Tracks authorized researchers.
 
-### Constants
-- `contract-owner`: Defines the contract's owner.
-- Error codes for various failure cases (e.g., unauthorized access, duplicate registration, invalid role selection).
-
-### Data Variables
-- `user-identities`: Stores user details, including DID, role, verification status, metadata, registration time, and last update timestamp.
-- `role-permissions`: Stores permission mappings for each role.
-- `verification-requests`: Stores user verification requests, including proof documents and request status.
+### Variables
+- **`submission-counter`**: Tracks the number of submissions.
+- **`contract-owner`**: Stores the contract owner.
 
 ## Functions
-
 ### Public Functions
-- **register-identity(did, role, metadata)**: Registers a new user identity.
-- **submit-verification-request(proof-document)**: Submits a verification request.
-- **verify-identity(user)**: Allows admins to approve a user's verification request.
-- **update-metadata(new-metadata)**: Updates the metadata of a registered user.
+#### `initialize-contract(researcher: principal) -> (ok true | err)`
+Initializes the contract and authorizes a researcher (only callable by the contract owner).
+
+#### `submit-anonymous-data(category: string, value: uint, ring-size: uint, ring-signature: buff) -> (ok submission-id | err)`
+Submits anonymized data under a specified category using a ring signature.
+
+#### `add-researcher(researcher: principal) -> (ok true | err)`
+Adds a new researcher to the authorized list (only callable by the contract owner).
+
+#### `remove-researcher(researcher: principal) -> (ok true | err)`
+Removes a researcher from the authorized list (only callable by the contract owner).
 
 ### Read-Only Functions
-- **has-permission(user, permission-key)**: Checks if a user has a specific permission.
-- **get-identity(user)**: Retrieves identity details of a user.
-- **get-verification-request(user)**: Fetches the verification request of a user.
-- **is-verified(user)**: Checks if a user is verified.
-- **get-role-permissions(role)**: Retrieves the permission set for a specific role.
+#### `get-aggregated-data(category: string) -> (ok data | none)`
+Retrieves aggregated data for a given category.
 
 ### Private Functions
-- **is-admin(user)**: Checks if a user is an admin.
-- **can-verify(user)**: Checks if a user has verification privileges.
+#### `generate-ring-members(size: uint) -> list`
+Generates a list of ring members for anonymity.
+
+#### `is-authorized(user: principal) -> bool`
+Checks if a user is authorized to submit data.
+
+## Usage
+1. **Initialize the contract** by adding an initial authorized researcher.
+2. **Submit anonymized data** under different research categories.
+3. **Retrieve aggregated data** for research analysis.
+4. **Manage researchers** to control data submission access.
 
 ## Security Considerations
-- Only admins can verify identities and update permissions.
-- Role-based permissions prevent unauthorized actions.
-- Users cannot register multiple identities under the same principal.
-- Verification requests ensure that only valid users gain special access.
+- Only authorized researchers can submit and retrieve data.
+- Ring signatures help maintain anonymity while ensuring verifiable submissions.
+- Contract owner has exclusive control over researcher management.
 
-## Conclusion
-This smart contract provides a robust foundation for decentralized identity management with role-based authentication. It ensures secure registration, verification, and permission handling for different user roles.
+## License
+This project is open-source and available for modification under an appropriate open-source license.
+
